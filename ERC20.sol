@@ -8,20 +8,21 @@ contract ERC20 is IERC20 {
     uint public _totalSupply;
     mapping(address => uint) public _balanceOf;
     mapping(address => mapping(address => uint)) public allowances;
-    string public name = "Token1";
-    string public symbol = "TK1";
-    uint8 public decimals = 18;
+    string public name;
+    string public symbol;
+    uint8 public decimals;
     address immutable public i_owner;
 
-    constructor() {
+    constructor(string memory _name, string memory _symbol, uint8  _decimals) {
         i_owner = msg.sender;
+        name = _name;
+        symbol = _symbol;
+        decimals = _decimals;
     }
 
     error not_Owner();
 
     error not_Enough_Tokens();
-
-    error allower_Is_Spender();
 
     modifier onlyOwner() {
         if(msg.sender != i_owner) {
@@ -42,15 +43,6 @@ contract ERC20 is IERC20 {
     }
 
     function approve(address spender, uint256 amount) external returns (bool) {
-        if(spender == msg.sender) {
-            revert allower_Is_Spender();
-        }
-
-        /* The below "if" statement exists to stop the approver from approving an amount he doesn't hold*/
-        /* But it is still ineffective in a case where an approver can approve multiple amounts to multiple spenders which collectively exceed the amount he holds*/
-        if(amount > _balanceOf[msg.sender]) {
-            revert not_Enough_Tokens();
-        }
         allowances[msg.sender][spender] = amount;
         emit Approval(msg.sender, spender, amount);
         return true;
@@ -87,7 +79,6 @@ contract ERC20 is IERC20 {
         emit Transfer(address(0), msg.sender, amount);
     }
 
-    /* Should token creators have the power to burn any account's tokens? */
     function burn(address from, uint amount) external onlyOwner {
         _balanceOf[from] -= amount;
         _totalSupply -= amount;
